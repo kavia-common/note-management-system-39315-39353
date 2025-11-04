@@ -1,6 +1,7 @@
 const cors = require('cors');
 const express = require('express');
 const routes = require('./routes');
+const notesRoutes = require('./routes/notes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../swagger');
 
@@ -43,13 +44,17 @@ app.use(express.json());
 
 // Mount routes
 app.use('/', routes);
+app.use('/api/notes', notesRoutes);
 
-// Error handling middleware
+// Error handling middleware (returns JSON with proper status)
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    status: 'error',
-    message: 'Internal Server Error',
+  const status = err.status && Number.isInteger(err.status) ? err.status : 500;
+  const message = err.message || 'Internal Server Error';
+  if (status >= 500) {
+    console.error(err.stack || err);
+  }
+  res.status(status).json({
+    error: message,
   });
 });
 
